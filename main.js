@@ -6,6 +6,10 @@ import BorderPlugin from 'https://cdn.jsdelivr.net/npm/@liquid-js/qr-code-stylin
 var ICONS = [
   { key: 'join',     label: 'Join / Add Person', iconify: 'mdi:account-plus'          },
   { key: 'calendar', label: 'Calendar Sync',      iconify: 'hugeicons:calendar-sync'   },
+  { key: 'app',      label: 'App Download',       iconify: 'mdi:cellphone-arrow-down'  },
+  { key: 'facebook', label: 'Facebook',            iconify: 'mdi:facebook'              },
+  { key: 'list',     label: 'List / Info',        iconify: 'mdi:format-list-bulleted'  },
+  { key: 'cost',     label: 'Cost / Dollar',       iconify: 'mdi:currency-usd'          },
   { key: 'link',     label: 'Link',               iconify: 'mdi:link-variant'         },
   { key: 'location', label: 'Location Pin',       iconify: 'mdi:map-marker'           },
   { key: 'info',     label: 'Info',               iconify: 'mdi:information-outline'  },
@@ -52,10 +56,12 @@ var COLOR_SCHEMES = [
   },
 ];
 
-// Default QR codes the page starts with (first run only — after that, the
-// user's own list in localStorage takes over, including any renames,
-// additions, or removals). The Calendar entry presets to scout-cal's exact
-// icon and color scheme defaults.
+// Suggested QR codes offered to every user. Each is seeded into the user's
+// list exactly once (tracked by id in SEEDED_STORAGE_KEY, independent of
+// STORAGE_KEY) — so adding an entry here rolls it out to existing users on
+// their next visit without touching anything they've already customized or
+// removed, and without ever re-adding one they deleted. The Calendar entry
+// presets to scout-cal's exact icon and color scheme defaults.
 var DEFAULT_ENTRIES = [
   {
     id: 'join', label: 'Pack Join Link', url: '',
@@ -66,6 +72,26 @@ var DEFAULT_ENTRIES = [
     id: 'calendar', label: 'Pack Calendar Link', url: '',
     icon: 'calendar', colorScheme: 'navy-gold',
     topText: '', bottomText: 'SCAN TO SUBSCRIBE',
+  },
+  {
+    id: 'scout-app', label: 'Download Scout App', url: '',
+    icon: 'app', colorScheme: 'navy-gold',
+    topText: '', bottomText: 'DOWNLOAD THE APP',
+  },
+  {
+    id: 'facebook', label: 'Pack Facebook Group', url: '',
+    icon: 'facebook', colorScheme: 'navy-gold',
+    topText: '', bottomText: 'JOIN OUR FACEBOOK GROUP',
+  },
+  {
+    id: 'den-info', label: 'Den Information at a Glance', url: '',
+    icon: 'list', colorScheme: 'navy-gold',
+    topText: '', bottomText: 'DEN INFO',
+  },
+  {
+    id: 'pack-costs', label: 'Pack Costs Explained', url: '',
+    icon: 'cost', colorScheme: 'navy-gold',
+    topText: '', bottomText: 'PACK COSTS EXPLAINED',
   },
 ];
 
@@ -84,17 +110,52 @@ function makeId() {
 }
 
 var STORAGE_KEY = 'cubQrGenerator';
+var SEEDED_STORAGE_KEY = 'cubQrGeneratorSeeded';
 var STORED_FIELDS = ['id', 'label', 'url', 'icon', 'colorScheme', 'topText', 'bottomText'];
 
-function loadEntries() {
+function readJson(key, fallback) {
   try {
-    var raw = window.localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      var saved = JSON.parse(raw);
-      if (Array.isArray(saved) && saved.length) return saved;
-    }
+    var raw = window.localStorage.getItem(key);
+    if (raw) return JSON.parse(raw);
   } catch (e) { /* ignore corrupt/unavailable storage */ }
-  return DEFAULT_ENTRIES.map(function (def) { return Object.assign({}, def); });
+  return fallback;
+}
+
+function writeJson(key, value) {
+  try { window.localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* ignore unavailable storage */ }
+}
+
+// Loads the user's saved list, then appends any DEFAULT_ENTRIES that have
+// never been seeded before (first-ever run seeds all of them). Entries the
+// user has since deleted or renamed are left alone — seeding is a one-time
+// "add if new" merge, not a sync.
+function loadEntries() {
+  var entries   = readJson(STORAGE_KEY, []);
+  var seededIds = readJson(SEEDED_STORAGE_KEY, []);
+  if (!Array.isArray(entries))   entries = [];
+  if (!Array.isArray(seededIds)) seededIds = [];
+
+  var seededSet = {};
+  seededIds.forEach(function (id) { seededSet[id] = true; });
+  var presentSet = {};
+  entries.forEach(function (e) { presentSet[e.id] = true; });
+
+  var changed = false;
+  DEFAULT_ENTRIES.forEach(function (def) {
+    if (seededSet[def.id]) return;
+    seededIds.push(def.id);
+    changed = true;
+    if (!presentSet[def.id]) {
+      entries.push(Object.assign({}, def));
+      presentSet[def.id] = true;
+    }
+  });
+
+  if (changed) {
+    writeJson(STORAGE_KEY, entries);
+    writeJson(SEEDED_STORAGE_KEY, seededIds);
+  }
+  return entries;
 }
 
 function buildBorderPlugin(scheme, topText, bottomText) {
@@ -173,7 +234,7 @@ window.addEventListener('DOMContentLoaded', function () {
       STORED_FIELDS.forEach(function (f) { record[f] = entry[f]; });
       return record;
     });
-    try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave)); } catch (e) { /* ignore unavailable storage */ }
+    writeJson(STORAGE_KEY, toSave);
   }
 
   // Rebuild the whole QRCodeStyling instance on every change (rather than
