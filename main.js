@@ -52,24 +52,25 @@ var COLOR_SCHEMES = [
   },
 ];
 
-// The QR codes this page generates. Add another entry here to offer a new
-// QR code type — the template, storage, and rendering all iterate over this.
-var QR_DEFS = [
+// Default QR codes the page starts with (first run only — after that, the
+// user's own list in localStorage takes over, including any renames,
+// additions, or removals). The Calendar entry presets to scout-cal's exact
+// icon and color scheme defaults.
+var DEFAULT_ENTRIES = [
   {
-    id: 'join', label: 'Pack Join Link',
-    urlPlaceholder: 'https://beascout.scouting.org/list/...',
+    id: 'join', label: 'Pack Join Link', url: '',
     icon: 'join', colorScheme: 'navy-gold',
     topText: '', bottomText: 'SCAN TO JOIN',
   },
   {
-    // Preset to match scout-cal's calendar QR defaults exactly: same icon
-    // (calendar-sync) and same color scheme (navy-gold).
-    id: 'calendar', label: 'Pack Calendar Link',
-    urlPlaceholder: 'https://yourpack.github.io/cub-cal/?p=XXXXX',
+    id: 'calendar', label: 'Pack Calendar Link', url: '',
     icon: 'calendar', colorScheme: 'navy-gold',
     topText: '', bottomText: 'SCAN TO SUBSCRIBE',
   },
 ];
+
+var URL_PLACEHOLDER = 'https://example.com/your-link';
+var NEW_ENTRY_LABEL = 'New QR Code';
 
 function findByKey(list, key) {
   for (var i = 0; i < list.length; i++) {
@@ -78,26 +79,22 @@ function findByKey(list, key) {
   return list[0];
 }
 
-var STORAGE_KEY = 'cubQrGenerator';
-var EDITABLE_FIELDS = ['url', 'icon', 'colorScheme', 'topText', 'bottomText'];
+function makeId() {
+  return 'qr-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7);
+}
 
-function loadSavedEntries(defs) {
-  var saved = {};
+var STORAGE_KEY = 'cubQrGenerator';
+var STORED_FIELDS = ['id', 'label', 'url', 'icon', 'colorScheme', 'topText', 'bottomText'];
+
+function loadEntries() {
   try {
     var raw = window.localStorage.getItem(STORAGE_KEY);
-    if (raw) saved = JSON.parse(raw);
-  } catch (e) { /* ignore corrupt/unavailable storage */ }
-
-  return defs.map(function (def) {
-    var entry = Object.assign({}, def);
-    var savedEntry = saved[def.id];
-    if (savedEntry) {
-      EDITABLE_FIELDS.forEach(function (f) {
-        if (typeof savedEntry[f] === 'string') entry[f] = savedEntry[f];
-      });
+    if (raw) {
+      var saved = JSON.parse(raw);
+      if (Array.isArray(saved) && saved.length) return saved;
     }
-    return entry;
-  });
+  } catch (e) { /* ignore corrupt/unavailable storage */ }
+  return DEFAULT_ENTRIES.map(function (def) { return Object.assign({}, def); });
 }
 
 function buildBorderPlugin(scheme, topText, bottomText) {
@@ -159,29 +156,25 @@ function qrOptionsFor(entry) {
 }
 
 window.addEventListener('DOMContentLoaded', function () {
-  var entries = loadSavedEntries(QR_DEFS);
-
   var ractive = new Ractive({
     target: '#app',
     template: '#generator-template',
     data: {
-      entries: entries,
+      entries: loadEntries(),
       icons: ICONS,
       colorSchemes: COLOR_SCHEMES,
+      urlPlaceholder: URL_PLACEHOLDER,
     },
   });
 
-  var watchPattern = EDITABLE_FIELDS.map(function (f) { return 'entries.*.' + f; }).join(' ');
-
-  ractive.observe(watchPattern, function () {
-    var toSave = {};
-    ractive.get('entries').forEach(function (entry) {
+  function saveEntries() {
+    var toSave = ractive.get('entries').map(function (entry) {
       var record = {};
-      EDITABLE_FIELDS.forEach(function (f) { record[f] = entry[f]; });
-      toSave[entry.id] = record;
+      STORED_FIELDS.forEach(function (f) { record[f] = entry[f]; });
+      return record;
     });
     try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave)); } catch (e) { /* ignore unavailable storage */ }
-  }, { init: false });
+  }
 
   // Rebuild the whole QRCodeStyling instance on every change (rather than
   // calling .update() on a shared instance) so stale plugin/text state from
@@ -202,9 +195,41 @@ window.addEventListener('DOMContentLoaded', function () {
     }
   }
   function renderAll() {
-    ractive.get('entries').forEach(renderEntry);
+    var liveIds = {};
+    ractive.get('entries').forEach(function (entry) {
+      liveIds[entry.id] = true;
+      renderEntry(entry);
+    });
+    Object.keys(currentQrCodes).forEach(function (id) {
+      if (!liveIds[id]) delete currentQrCodes[id];
+    });
   }
-  ractive.observe(watchPattern, renderAll, { init: true });
+
+  // 'entries' itself catches add/remove/reorder (via push/splice below);
+  // the field-level patterns catch in-place edits to an entry's properties.
+  var editPattern = STORED_FIELDS
+    .filter(function (f) { return f !== 'id'; })
+    .map(function (f) { return 'entries.*.' + f; })
+    .join(' ');
+
+  ractive.observe('entries ' + editPattern, function () {
+    saveEntries();
+    renderAll();
+  }, { init: true });
+
+  ractive.on('add', function () {
+    ractive.push('entries', {
+      id: makeId(), label: NEW_ENTRY_LABEL, url: '',
+      icon: ICONS[0].key, colorScheme: COLOR_SCHEMES[0].key,
+      topText: '', bottomText: '',
+    });
+  });
+
+  ractive.on('remove', function (event, id) {
+    var entries = ractive.get('entries');
+    var index = entries.findIndex(function (e) { return e.id === id; });
+    if (index !== -1) ractive.splice('entries', index, 1);
+  });
 
   ractive.on('savePng', function (event, id) {
     var qr = currentQrCodes[id];

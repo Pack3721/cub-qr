@@ -23,18 +23,20 @@ bundle exec jekyll serve
 
 Then open `http://127.0.0.1:4000/cub-qr/` (or your configured `baseurl`).
 
-## Adding a new QR code type
+## Adding/editing QR codes
 
-Each QR code on the page is one entry in the `QR_DEFS` array in `main.js`.
-Add an entry there (`id`, `label`, `urlPlaceholder`, default `icon` and
-`colorScheme`, default `topText`/`bottomText`) and it will automatically get
-its own box on the page — URL field, icon picker, color scheme picker,
-border text fields, live preview, copy/save buttons.
+The list of QR codes is fully editable on the page itself — click "+ Add QR
+Code" for a new one, rename any entry's name field, or hit the ✕ to remove
+one. Each box has its own URL, icon picker, color scheme picker, and border
+text fields, with a live preview and copy/save buttons. The whole list is
+saved to `localStorage` so it persists across visits.
+
+`DEFAULT_ENTRIES` in `main.js` is just the seed list shown on first visit
+(currently Pack Join Link and Pack Calendar Link, the latter preset to
+scout-cal's calendar QR defaults) — after that, the user's own list takes
+over.
 
 Icons come from [Iconify](https://icon-sets.iconify.design/) — add entries to
-the `ICONS` array with the icon's Iconify id. Color schemes are defined in
-`COLOR_SCHEMES`; the "Navy & Gold" scheme matches the default styling used by
-scout-cal's calendar QR codes.
-
-User-entered values (URL, icon, color scheme, border text) are saved to
-`localStorage` per-entry so they persist across visits.
+the `ICONS` array with the icon's Iconify id to offer more choices. Color
+schemes are defined in `COLOR_SCHEMES`; the "Navy & Gold" scheme matches the
+default styling used by scout-cal's calendar QR codes.
