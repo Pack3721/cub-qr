@@ -45,3 +45,14 @@ Icons come from [Iconify](https://icon-sets.iconify.design/) — add entries to
 the `ICONS` array with the icon's Iconify id to offer more choices. Color
 schemes are defined in `COLOR_SCHEMES`; the "Navy & Gold" scheme matches the
 default styling used by scout-cal's calendar QR codes.
+
+## Export / Import
+
+Since everything lives in `localStorage`, "Export Settings" downloads the
+current list as a `cub-qr-settings.json` file, and "Import Settings" loads
+one back in — handy for handing your list to another den leader, moving it
+to another browser, or keeping a backup. Importing **replaces** the current
+list wholesale and is treated as authoritative: it won't get any of the
+suggested defaults re-appended on top of it later, even ones the imported
+file omits. Unrecognized icon/color-scheme values in an imported file fall
+back to the first option rather than failing the import.

@@ -145,6 +145,27 @@ function makeId() {
   return 'qr-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7);
 }
 
+// Coerces one imported record into a valid entry: unknown/missing icon and
+// colorScheme fall back to the first option, non-string text fields become
+// '', and ids are kept if present (deduped against everything seen so far
+// in this import) or generated fresh otherwise.
+function sanitizeEntry(raw, seenIds) {
+  raw = raw && typeof raw === 'object' ? raw : {};
+  var id = typeof raw.id === 'string' && raw.id && !seenIds[raw.id] ? raw.id : makeId();
+  while (seenIds[id]) id = makeId();
+  seenIds[id] = true;
+
+  return {
+    id: id,
+    label: typeof raw.label === 'string' ? raw.label : NEW_ENTRY_LABEL,
+    url: typeof raw.url === 'string' ? raw.url : '',
+    icon: findByKey(ICONS, raw.icon).key,
+    colorScheme: findByKey(COLOR_SCHEMES, raw.colorScheme).key,
+    topText: typeof raw.topText === 'string' ? raw.topText : '',
+    bottomText: typeof raw.bottomText === 'string' ? raw.bottomText : '',
+  };
+}
+
 var STORAGE_KEY = 'cubQrGenerator';
 var SEEDED_STORAGE_KEY = 'cubQrGeneratorSeeded';
 var STORED_FIELDS = ['id', 'label', 'url', 'icon', 'colorScheme', 'topText', 'bottomText'];
@@ -261,6 +282,8 @@ window.addEventListener('DOMContentLoaded', function () {
       icons: ICONS,
       colorSchemes: COLOR_SCHEMES,
       urlPlaceholder: URL_PLACEHOLDER,
+      importMessage: '',
+      importError: '',
     },
   });
 
@@ -349,5 +372,68 @@ window.addEventListener('DOMContentLoaded', function () {
     var entry = ractive.get('entries').find(function (e) { return e.id === id; });
     var name = (entry.label || 'qr-code').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'qr-code';
     browserUtils.download(qr, { name: name, extension: 'png' }, { width: 1024, height: 1024, margin: 0 });
+  };
+
+  ractive.exportSettings = function () {
+    var payload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      entries: ractive.get('entries').map(function (entry) {
+        var record = {};
+        STORED_FIELDS.forEach(function (f) { record[f] = entry[f]; });
+        return record;
+      }),
+    };
+    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'cub-qr-settings.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  // Bound to the hidden <input type="file"> via on-change="@this.handleImportFile(@node)".
+  ractive.handleImportFile = function (inputNode) {
+    var file = inputNode.files && inputNode.files[0];
+    if (!file) return;
+
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var parsed = JSON.parse(reader.result);
+        var imported = Array.isArray(parsed) ? parsed : parsed.entries;
+        if (!Array.isArray(imported)) throw new Error('expected an "entries" array');
+
+        var seenIds = {};
+        var sanitized = imported.map(function (raw) { return sanitizeEntry(raw, seenIds); });
+
+        ractive.set('entries', sanitized);
+        ractive.set('importError', '');
+        ractive.set('importMessage', 'Imported ' + sanitized.length + ' QR code' + (sanitized.length === 1 ? '' : 's') + '.');
+
+        // Treat the import as authoritative: mark every suggested default as
+        // already-seeded so loadEntries() won't append one back on top of
+        // whatever was just imported (including ones the import omits).
+        var seededIds = readJson(SEEDED_STORAGE_KEY, []);
+        if (!Array.isArray(seededIds)) seededIds = [];
+        DEFAULT_ENTRIES.forEach(function (def) {
+          if (seededIds.indexOf(def.id) === -1) seededIds.push(def.id);
+        });
+        writeJson(SEEDED_STORAGE_KEY, seededIds);
+      } catch (e) {
+        ractive.set('importMessage', '');
+        ractive.set('importError', 'Could not import file: ' + e.message);
+      }
+      inputNode.value = '';
+    };
+    reader.onerror = function () {
+      ractive.set('importMessage', '');
+      ractive.set('importError', 'Could not read the file.');
+      inputNode.value = '';
+    };
+    reader.readAsText(file);
   };
 });
