@@ -1,0 +1,15 @@
+# Update baseurl to match your GitHub Pages repo path (e.g. /your-repo-name)
+baseurl: "/cub-qr"
+# Update url to match your GitHub Pages domain (e.g. https://yourpack.github.io)
+url: "https://pack3721.github.io"
+
+title: Pack QR Generator
+description: Generate branded QR codes for pack join links, calendar subscriptions, and more
+
+plugins: []
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - README.md
+  - .gitignore
