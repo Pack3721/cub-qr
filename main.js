@@ -302,17 +302,28 @@ window.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // 'entries' itself catches add/remove/reorder (via push/splice below);
-  // the field-level patterns catch in-place edits to an entry's properties.
+  // Re-render every entry when the list itself changes shape (add/remove,
+  // via push/splice below) or on first load.
+  ractive.observe('entries', function () {
+    saveEntries();
+    renderAll();
+  }, { init: true });
+
+  // In-place edits to a single entry's fields only re-render *that* entry —
+  // otherwise every keystroke in one box would tear down and rebuild every
+  // other entry's QR code too (each re-fetching its icon over the network),
+  // and a Save PNG click could land mid-rebuild on an entry you never touched.
   var editPattern = STORED_FIELDS
     .filter(function (f) { return f !== 'id'; })
     .map(function (f) { return 'entries.*.' + f; })
     .join(' ');
 
-  ractive.observe('entries ' + editPattern, function () {
+  ractive.observe(editPattern, function (newValue, oldValue, keypath) {
     saveEntries();
-    renderAll();
-  }, { init: true });
+    var index = keypath.split('.')[1];
+    var entry = ractive.get('entries.' + index);
+    if (entry) renderEntry(entry);
+  }, { init: false });
 
   ractive.on('add', function () {
     ractive.push('entries', {
@@ -322,17 +333,21 @@ window.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  ractive.on('remove', function (event, id) {
+  // Called via on-click="@this.removeEntry(id)" / "@this.savePng(id)" rather
+  // than proxy-event colon syntax (on-click="name:{{id}}") — the latter
+  // never actually fired its handler in this Ractive version, which was the
+  // real cause of "Save PNG" (and Remove) silently doing nothing.
+  ractive.removeEntry = function (id) {
     var entries = ractive.get('entries');
     var index = entries.findIndex(function (e) { return e.id === id; });
     if (index !== -1) ractive.splice('entries', index, 1);
-  });
+  };
 
-  ractive.on('savePng', function (event, id) {
+  ractive.savePng = function (id) {
     var qr = currentQrCodes[id];
     if (!qr) return;
     var entry = ractive.get('entries').find(function (e) { return e.id === id; });
     var name = (entry.label || 'qr-code').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'qr-code';
     browserUtils.download(qr, { name: name, extension: 'png' }, { width: 1024, height: 1024, margin: 0 });
-  });
+  };
 });

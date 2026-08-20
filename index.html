@@ -30,7 +30,7 @@
                 placeholder="QR code name" value="{{.label}}">
             </div>
             <div class="control">
-              <button class="delete is-small" on-click="remove:{{id}}" title="Remove this QR code" aria-label="Remove"></button>
+              <button class="delete is-small" on-click="@this.removeEntry(id)" title="Remove this QR code" aria-label="Remove"></button>
             </div>
           </div>
 
@@ -81,7 +81,7 @@
 
           {{#if url}}
             <div class="has-text-centered mt-3">
-              <button class="button is-small is-light" on-click="savePng:{{id}}">Save PNG</button>
+              <button class="button is-small is-light" on-click="@this.savePng(id)">Save PNG</button>
             </div>
           {{else}}
             <p class="help has-text-grey has-text-centered mt-3">Enter a URL above to generate this QR code.</p>
