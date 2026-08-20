@@ -54,6 +54,42 @@ var COLOR_SCHEMES = [
     borderColor: '#7A0C1E', borderTextColor: '#FFD700',
     iconColor: '#7A0C1E',
   },
+  {
+    key: 'green-gold', label: 'Green & Gold', shape: 'circle',
+    dotsColor: '#1B5E20', dotsType: 'dots',
+    backgroundColor: '#ffffff',
+    cornersSquareColor: '#FFC72C', cornersSquareType: 'extra-rounded',
+    cornersDotColor: '#1B5E20', cornersDotType: 'dot',
+    borderColor: '#1B5E20', borderTextColor: '#FFC72C',
+    iconColor: '#1B5E20',
+  },
+  {
+    key: 'blue-red', label: 'Blue & Red', shape: 'circle',
+    dotsColor: '#0D47A1', dotsType: 'dots',
+    backgroundColor: '#ffffff',
+    cornersSquareColor: '#C62828', cornersSquareType: 'extra-rounded',
+    cornersDotColor: '#0D47A1', cornersDotType: 'dot',
+    borderColor: '#0D47A1', borderTextColor: '#ffffff',
+    iconColor: '#0D47A1',
+  },
+  {
+    key: 'purple-gold', label: 'Purple & Gold', shape: 'circle',
+    dotsColor: '#4A148C', dotsType: 'dots',
+    backgroundColor: '#ffffff',
+    cornersSquareColor: '#FFC72C', cornersSquareType: 'extra-rounded',
+    cornersDotColor: '#4A148C', cornersDotType: 'dot',
+    borderColor: '#4A148C', borderTextColor: '#FFC72C',
+    iconColor: '#4A148C',
+  },
+  {
+    key: 'teal-orange', label: 'Teal & Orange', shape: 'circle',
+    dotsColor: '#00695C', dotsType: 'dots',
+    backgroundColor: '#ffffff',
+    cornersSquareColor: '#FF6F00', cornersSquareType: 'extra-rounded',
+    cornersDotColor: '#00695C', cornersDotType: 'dot',
+    borderColor: '#00695C', borderTextColor: '#FFB74D',
+    iconColor: '#00695C',
+  },
 ];
 
 // Suggested QR codes offered to every user. Each is seeded into the user's
