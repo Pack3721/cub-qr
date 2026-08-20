@@ -80,9 +80,7 @@
           <div id="qr-{{id}}" class="qr-wrap mt-4"></div>
 
           {{#if url}}
-            <div class="url-display mb-3 mt-3">{{url}}</div>
-            <div class="has-text-centered">
-              <button class="button is-small is-light" id="copy-btn-{{id}}" on-click="copy:{{id}}">Copy Link</button>
+            <div class="has-text-centered mt-3">
               <button class="button is-small is-light" on-click="savePng:{{id}}">Save PNG</button>
             </div>
           {{else}}

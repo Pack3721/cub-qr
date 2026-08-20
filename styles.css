@@ -23,16 +23,6 @@ html, body {
   color: #ffffff;
 }
 
-.url-display {
-  word-break: break-all;
-  font-size: 0.8rem;
-  font-family: monospace;
-  background: #f5f5f5;
-  border: 1px solid #dbdbdb;
-  border-radius: 4px;
-  padding: 0.5rem 0.75rem;
-}
-
 .qr-wrap {
   display: flex;
   justify-content: center;

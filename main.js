@@ -238,17 +238,4 @@ window.addEventListener('DOMContentLoaded', function () {
     var name = (entry.label || 'qr-code').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'qr-code';
     browserUtils.download(qr, { name: name, extension: 'png' }, { width: 1024, height: 1024, margin: 0 });
   });
-
-  ractive.on('copy', function (event, id) {
-    var entry = ractive.get('entries').find(function (e) { return e.id === id; });
-    if (!entry || !entry.url) return;
-    var btn = document.getElementById('copy-btn-' + id);
-    navigator.clipboard.writeText(entry.url).then(function () {
-      if (btn) {
-        var orig = btn.textContent;
-        btn.textContent = 'Copied!';
-        setTimeout(function () { btn.textContent = orig; }, 1500);
-      }
-    });
-  });
 });
