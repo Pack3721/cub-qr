@@ -33,8 +33,8 @@ saved to `localStorage` so it persists across visits.
 
 `DEFAULT_ENTRIES` in `main.js` is the suggested list (Pack Join Link, Pack
 Calendar Link, Download Scout App, Pack Facebook Group, Den Information at a
-Glance, Pack Costs Explained — the Calendar entry preset to scout-cal's QR
-defaults). Each default is added to a visitor's list **exactly once**: a
+Glance, Pack Costs Explained — the Calendar entry defaults to the Purple &
+Gold color scheme). Each default is added to a visitor's list **exactly once**: a
 separate `localStorage` key tracks which default ids have already been
 seeded, independent of the user's actual list. So adding a new entry to
 `DEFAULT_ENTRIES` rolls it out to existing users next time they open the

@@ -96,8 +96,7 @@ var COLOR_SCHEMES = [
 // list exactly once (tracked by id in SEEDED_STORAGE_KEY, independent of
 // STORAGE_KEY) — so adding an entry here rolls it out to existing users on
 // their next visit without touching anything they've already customized or
-// removed, and without ever re-adding one they deleted. The Calendar entry
-// presets to scout-cal's exact icon and color scheme defaults.
+// removed, and without ever re-adding one they deleted.
 var DEFAULT_ENTRIES = [
   {
     id: 'join', label: 'Pack Join Link', url: '',
@@ -106,7 +105,7 @@ var DEFAULT_ENTRIES = [
   },
   {
     id: 'calendar', label: 'Pack Calendar Link', url: '',
-    icon: 'calendar', colorScheme: 'navy-gold',
+    icon: 'calendar', colorScheme: 'purple-gold',
     topText: '', bottomText: 'SCAN TO SUBSCRIBE',
   },
   {
