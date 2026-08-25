@@ -1,0 +1,63 @@
+---
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scouting App</title>
+  <style>
+    html, body { background: #ffffff; margin: 0; height: 100%; }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+</head>
+<body>
+
+<div class="container has-text-centered" style="max-width: 480px; padding: 1.5rem;">
+  <img src="{{ '/scout-app/scout-app.png' | relative_url }}" alt="Scouting App icon"
+    style="width: 140px; height: 140px; border-radius: 22%; margin: 0 auto 1.5rem; display: block;">
+
+  <h1 class="title is-5 mb-5">Download the Scouting App</h1>
+
+  <div class="buttons is-centered">
+    <a id="apple-btn" class="button is-medium is-dark" target="_blank" rel="noopener"
+      href="https://itunes.apple.com/us/app/scouting/id1218464473?mt=8">
+      <span class="icon"><img src="https://api.iconify.design/mdi:apple.svg?color=%23ffffff" alt=""></span>
+      <span>Download on the App Store</span>
+    </a>
+    <a id="google-btn" class="button is-medium is-dark" target="_blank" rel="noopener"
+      href="https://play.google.com/store/apps/details?id=com.bsa.sbm&hl=en">
+      <span class="icon"><img src="https://api.iconify.design/mdi:google-play.svg?color=%23ffffff" alt=""></span>
+      <span>Get it on Google Play</span>
+    </a>
+  </div>
+</div>
+
+<script>
+  // Only hide a button when we're confident about the platform (iOS/Android).
+  // Anything else (Mac, Windows, Linux, or unrecognized) shows both.
+  (function () {
+    var ua = navigator.userAgent || '';
+    var platform = navigator.platform || '';
+
+    var isIOS = /iPhone|iPad|iPod/.test(ua) ||
+      // iPadOS 13+ reports as "MacIntel" but has touch support, unlike real Macs.
+      (platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    var isAndroid = /Android/.test(ua);
+
+    if (isIOS) {
+      document.getElementById('google-btn').style.display = 'none';
+    } else if (isAndroid) {
+      document.getElementById('apple-btn').style.display = 'none';
+    }
+  })();
+</script>
+
+</body>
+</html>
