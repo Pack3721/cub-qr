@@ -1,0 +1,144 @@
+---
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pack QR Generator</title>
+  <style>html, body { background: #ffffff; margin: 0; }</style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <link rel="stylesheet" href="{{ '/styles.css' | relative_url }}?v={{ site.github.build_revision }}">
+</head>
+<body>
+
+<header class="scout-header">
+  <span class="fleur">⚜</span>
+  <h1>Pack QR Generator</h1>
+</header>
+
+<script id="generator-template" type="text/ractive">
+{% raw %}
+  <section class="section pb-2">
+    <div class="container" style="max-width: 600px;">
+
+      <div class="box">
+        <h2 class="title is-6 mb-3">Settings</h2>
+        <div class="buttons">
+          <button class="button is-small is-light" on-click="@this.exportSettings()">Export Settings</button>
+          <label class="button is-small is-light">
+            Import Settings…
+            <input type="file" accept="application/json" style="display:none" on-change="@this.handleImportFile(@node)">
+          </label>
+        </div>
+        {{#if importMessage}}
+          <p class="help has-text-success">{{importMessage}}</p>
+        {{/if}}
+        {{#if importError}}
+          <p class="help is-danger">{{importError}}</p>
+        {{/if}}
+      </div>
+
+      {{#each entries}}
+        <div class="box">
+          <div class="field is-grouped mb-3">
+            <div class="control is-expanded">
+              <input class="input is-small has-text-weight-semibold" type="text"
+                placeholder="QR code name" value="{{.label}}">
+            </div>
+            <div class="control">
+              <button class="delete is-small" on-click="@this.removeEntry(id)" title="Remove this QR code" aria-label="Remove"></button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label is-small">URL</label>
+            <div class="control">
+              <input class="input is-small" type="text" placeholder="{{~/urlPlaceholder}}" value="{{.url}}">
+            </div>
+          </div>
+
+          <div class="field is-grouped">
+            <div class="control is-expanded">
+              <label class="label is-small">Icon</label>
+              <div class="select is-small is-fullwidth">
+                <select value="{{.icon}}">
+                  {{#each ~/icons}}
+                    <option value="{{key}}">{{label}}</option>
+                  {{/each}}
+                </select>
+              </div>
+            </div>
+            <div class="control is-expanded">
+              <label class="label is-small">Color Scheme</label>
+              <div class="select is-small is-fullwidth">
+                <select value="{{.colorScheme}}">
+                  {{#each ~/colorSchemes}}
+                    <option value="{{key}}">{{label}}</option>
+                  {{/each}}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label is-small">Top Border Text (optional)</label>
+            <div class="control">
+              <input class="input is-small" type="text" maxlength="40" placeholder="e.g. PACK 3721" value="{{.topText}}">
+            </div>
+          </div>
+          <div class="field mb-0">
+            <label class="label is-small">Bottom Border Text (optional)</label>
+            <div class="control">
+              <input class="input is-small" type="text" maxlength="40" placeholder="e.g. SCAN TO JOIN" value="{{.bottomText}}">
+            </div>
+          </div>
+
+          <div id="qr-{{id}}" class="qr-wrap mt-4"></div>
+
+          {{#if url}}
+            <div class="has-text-centered mt-3">
+              <button class="button is-small is-light" on-click="@this.savePng(id)">Save PNG</button>
+            </div>
+          {{else}}
+            <p class="help has-text-grey has-text-centered mt-3">Enter a URL above to generate this QR code.</p>
+          {{/if}}
+        </div>
+      {{/each}}
+
+      {{^entries.length}}
+        <p class="has-text-grey has-text-centered mb-5">No QR codes yet — add one below.</p>
+      {{/entries.length}}
+
+      <div class="has-text-centered mb-5">
+        <button class="button is-small is-primary is-light" on-click="add">+ Add QR Code</button>
+      </div>
+
+    </div>
+  </section>
+{% endraw %}
+</script>
+
+<div id="app"></div>
+
+<footer class="footer">
+  <p>QR codes generated locally in your browser — nothing is uploaded.</p>
+  <div class="has-text-centered mt-2">
+    <a href="{{ site.github.repository_url }}" target="_blank" title="View on GitHub"
+      style="display: inline-flex; align-items: center;">
+      <img src="https://img.shields.io/badge/github-{{ site.github.repository_name | replace: '-', '--' }}-blue?logo=github"
+        alt="GitHub Repo Badge">
+    </a>
+    <a href="{{ site.github.repository_url }}/commit/{{ site.github.build_revision }}" target="_blank"
+      title="Build {{ site.github.build_revision | default: 'dev' }}"
+      style="display: inline-flex; align-items: center; margin-left: 0.4em;">
+      <img src="https://img.shields.io/badge/build-{{ site.github.build_revision | default: 'dev' | slice: 0, 7 }}-lightgrey"
+        alt="Build version badge">
+    </a>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/ractive@1.4.4/ractive.min.js"></script>
+<script type="module" src="{{ '/main.js' | relative_url }}?v={{ site.github.build_revision }}"></script>
+</body>
+</html>
